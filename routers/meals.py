@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from middleware.auth import get_current_user
 from database import supabase
 from models.meal import MealCreate, MealResponse
