@@ -38,14 +38,3 @@ async def meal_suggestion(req: ChatRequest, user_id: str = Depends(get_current_u
     ]
     result = await route_ai_request(messages, task='suggest')
     return AIResponse(content=result['content'], provider=result['provider'])
-
-from services.together_service import scan_food_image
-from pydantic import BaseModel
-
-class ScanFoodRequest(BaseModel):
-    image_base64: str
-
-@router.post('/scan-food')
-async def scan_food(req: ScanFoodRequest, user_id: str = Depends(get_current_user)):
-    result = await scan_food_image(req.image_base64)
-    return result
