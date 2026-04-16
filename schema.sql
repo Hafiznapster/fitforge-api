@@ -98,3 +98,23 @@ alter table public.body_metrics enable row level security;
 alter table public.water_logs enable row level security;
 create policy "Users manage own metrics" on body_metrics for all using (auth.uid() = user_id);
 create policy "Users manage own water" on water_logs for all using (auth.uid() = user_id);
+
+-- Auto-create profile on user registration
+create policy "Users can insert own profile" on profiles for insert with check (auth.uid() = id);
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, username, full_name)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data->>'full_name', '')
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
