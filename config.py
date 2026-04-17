@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
     OPENROUTER_API_KEY: Optional[str] = None
-    SECRET_KEY: str
+    SECRET_KEY: str = "unused-local-secret"
     JWT_ALGORITHM: str = "HS256"
     ALLOWED_ORIGINS: List[str] = ["http://localhost:8081", "http://localhost:8082", "https://fitforge-api-pahz.onrender.com", "https://fitforge-app.vercel.app"]
 
