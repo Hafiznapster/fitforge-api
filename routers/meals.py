@@ -22,7 +22,9 @@ async def get_meals(target_date: Optional[date] = None, user_id: str = Depends(g
     try:
         query = supabase.table("meals").select("*").eq("user_id", user_id)
         if target_date:
-            query = query.ilike("logged_at", f"{target_date.isoformat()}%")
+            start_date = target_date.isoformat()
+            end_date = f"{target_date.isoformat()} 23:59:59"
+            query = query.gte("logged_at", start_date).lte("logged_at", end_date)
 
         res = query.execute()
         return res.data

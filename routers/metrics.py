@@ -31,7 +31,9 @@ async def get_water_log(target_date: Optional[date] = None, user_id: str = Depen
     try:
         query = supabase.table("water_logs").select("*").eq("user_id", user_id)
         if target_date:
-            query = query.eq("logged_at", target_date.isoformat())
+            start_date = target_date.isoformat()
+            end_date = f"{target_date.isoformat()} 23:59:59"
+            query = query.gte("logged_at", start_date).lte("logged_at", end_date)
 
         res = query.execute()
         return res.data
