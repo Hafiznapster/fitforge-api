@@ -18,6 +18,19 @@ async def chat(req: ChatRequest, user_id: str = Depends(get_current_user)):
         {'role': 'user', 'content': req.message}
     ]
     result = await route_ai_request(messages, task='chat')
+
+    # Save to DB
+    try:
+        supabase.table("ai_interactions").insert({
+            "user_id": user_id,
+            "task_type": "chat",
+            "prompt": req.message,
+            "response": result['content'],
+            "provider": result['provider']
+        }).execute()
+    except Exception as e:
+        print(f"Error saving AI chat: {e}")
+
     return AIResponse(content=result['content'], provider=result['provider'])
 
 @router.post('/workout-plan', response_model=AIResponse)
@@ -28,6 +41,19 @@ async def generate_workout_plan(req: PlanRequest, user_id: str = Depends(get_cur
         {'role': 'user', 'content': prompt}
     ]
     result = await route_ai_request(messages, task='plan')
+
+    # Save to DB
+    try:
+        supabase.table("ai_interactions").insert({
+            "user_id": user_id,
+            "task_type": "plan",
+            "prompt": prompt,
+            "response": result['content'],
+            "provider": result['provider']
+        }).execute()
+    except Exception as e:
+        print(f"Error saving AI plan: {e}")
+
     return AIResponse(content=result['content'], provider=result['provider'])
 
 @router.post('/meal-suggestion', response_model=AIResponse)
@@ -37,4 +63,17 @@ async def meal_suggestion(req: ChatRequest, user_id: str = Depends(get_current_u
         {'role': 'user', 'content': req.message}
     ]
     result = await route_ai_request(messages, task='suggest')
+
+    # Save to DB
+    try:
+        supabase.table("ai_interactions").insert({
+            "user_id": user_id,
+            "task_type": "suggest",
+            "prompt": req.message,
+            "response": result['content'],
+            "provider": result['provider']
+        }).execute()
+    except Exception as e:
+        print(f"Error saving AI suggestion: {e}")
+
     return AIResponse(content=result['content'], provider=result['provider'])

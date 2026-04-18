@@ -34,8 +34,16 @@ async def create_workout(session_data: WorkoutSessionCreate, user_id: str = Depe
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create workout: {str(e)}")
 
+@router.get("/history", response_model=List[WorkoutSessionResponse])
+async def get_workout_history(limit: int = 20, user_id: str = Depends(get_current_user)):
+    try:
+        res = supabase.table("workout_sessions").select("*, workout_exercises(*)").eq("user_id", user_id).order("logged_at", ascending=False).limit(limit).execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch workout history: {str(e)}")
+
 @router.get("/", response_model=List[WorkoutSessionResponse])
-async def get_workouts(target_date: Optional[date] = None, user_id: str = Depends(get_current_user)):
+async def get_workouts(target_date: Optional[date] = None, limit: int = 30, offset: int = 0, user_id: str = Depends(get_current_user)):
     try:
         query = supabase.table("workout_sessions").select("*, workout_exercises(*)").eq("user_id", user_id)
 
@@ -44,7 +52,7 @@ async def get_workouts(target_date: Optional[date] = None, user_id: str = Depend
             end_date = f"{target_date.isoformat()} 23:59:59"
             query = query.gte("logged_at", start_date).lte("logged_at", end_date)
 
-        res = query.execute()
+        res = query.order("logged_at", ascending=False).range(offset, offset + limit - 1).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch workouts: {str(e)}")

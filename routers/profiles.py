@@ -23,10 +23,15 @@ class ProfileUpdate(BaseModel):
 
 @router.get("/me")
 async def get_profile(user_id: str = Depends(get_current_user)):
-    res = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
-    if not res.data:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return res.data
+    try:
+        res = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        return res.data
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error fetching profile: {str(e)}")
 
 @router.patch("/me")
 async def update_profile(update: ProfileUpdate, user_id: str = Depends(get_current_user)):

@@ -18,7 +18,7 @@ async def create_meal(meal: MealCreate, user_id: str = Depends(get_current_user)
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/")
-async def get_meals(target_date: Optional[date] = None, user_id: str = Depends(get_current_user)):
+async def get_meals(target_date: Optional[date] = None, limit: int = 30, offset: int = 0, user_id: str = Depends(get_current_user)):
     try:
         query = supabase.table("meals").select("*").eq("user_id", user_id)
         if target_date:
@@ -26,7 +26,7 @@ async def get_meals(target_date: Optional[date] = None, user_id: str = Depends(g
             end_date = f"{target_date.isoformat()} 23:59:59"
             query = query.gte("logged_at", start_date).lte("logged_at", end_date)
 
-        res = query.execute()
+        res = query.order("logged_at", ascending=False).range(offset, offset + limit - 1).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

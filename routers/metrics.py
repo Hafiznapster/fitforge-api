@@ -27,7 +27,7 @@ async def log_water(glasses: int, user_id: str = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Failed to log water: {str(e)}")
 
 @router.get("/water-log")
-async def get_water_log(target_date: Optional[date] = None, user_id: str = Depends(get_current_user)):
+async def get_water_log(target_date: Optional[date] = None, limit: int = 30, offset: int = 0, user_id: str = Depends(get_current_user)):
     try:
         query = supabase.table("water_logs").select("*").eq("user_id", user_id)
         if target_date:
@@ -35,7 +35,7 @@ async def get_water_log(target_date: Optional[date] = None, user_id: str = Depen
             end_date = f"{target_date.isoformat()} 23:59:59"
             query = query.gte("logged_at", start_date).lte("logged_at", end_date)
 
-        res = query.execute()
+        res = query.order("logged_at", ascending=False).range(offset, offset + limit - 1).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch water logs: {str(e)}")
@@ -51,9 +51,9 @@ async def log_body_metric(metric: BodyMetricCreate, user_id: str = Depends(get_c
         raise HTTPException(status_code=500, detail=f"Failed to log metric: {str(e)}")
 
 @router.get("/")
-async def get_body_metrics(user_id: str = Depends(get_current_user)):
+async def get_body_metrics(limit: int = 30, user_id: str = Depends(get_current_user)):
     try:
-        res = supabase.table("body_metrics").select("*").eq("user_id", user_id).order("logged_at", ascending=False).execute()
+        res = supabase.table("body_metrics").select("*").eq("user_id", user_id).order("logged_at", ascending=False).limit(limit).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
